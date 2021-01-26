@@ -2,7 +2,7 @@ import i18n from 'i18n'
 import countries from 'i18n-iso-countries'
 import { isNumber } from 'lodash'
 import React, { useEffect, useState } from 'react'
-import { Card, Form, InputGroup } from 'react-bootstrap'
+import { Card, Form, InputGroup, ToggleButton } from 'react-bootstrap'
 import { Typeahead } from 'react-bootstrap-typeahead'
 import { Trans, useTranslation } from 'react-i18next'
 
@@ -13,7 +13,6 @@ import {
   calculateLocationPersonAverage,
   calculateLocationReportedPrevalence,
 } from 'data/calculate'
-import { TOP_LOCATION_MANUAL_ENTRY } from 'data/data'
 import { Locations, PrevalenceDataDate } from 'data/location'
 import 'components/calculator/styles/PrevalenceControls.scss'
 
@@ -28,10 +27,6 @@ const isFilled = (val: string): boolean => {
 
 const isTopLocation = (val: string): boolean => {
   return isFilled(val) && !!Locations[val]
-}
-
-const isManualEntry = (val: string): boolean => {
-  return val === TOP_LOCATION_MANUAL_ENTRY
 }
 
 const PrevalenceField: React.FunctionComponent<{
@@ -160,9 +155,6 @@ export const PrevalenceControls: React.FunctionComponent<{
   }
 
   const setLocationData = (topLocation: string, subLocation: string) => {
-    if (isManualEntry(topLocation)) {
-      setDetailsOpen(true)
-    }
     setter({
       ...data,
       ...dataForLocation(subLocation || topLocation),
@@ -171,18 +163,41 @@ export const PrevalenceControls: React.FunctionComponent<{
     })
   }
 
-  const handleEnterDataButtonOnClick = () => {
-    setLocationData(TOP_LOCATION_MANUAL_ENTRY, '')
-  }
+  const setManualPrevalenceData = (isManualEntry: boolean) => {
+    // If user might be leaving location mode, remember the position of the
+    // details box.
+    if (isManualEntryCurrently === false) {
+      setHadDetailsOpenInLocationMode(detailsOpen)
+    }
+    setIsManualEntryCurrently(isManualEntry)
+    const useManualEntry = isManualEntry ? 1 : 0
+    // If user is entering location mode, restore the position of the
+    // details box from the last time they were in location mode.
+    setDetailsOpen(isManualEntry || hadDetailsOpenInLocationMode)
 
-  const handleSelectLocationButtonOnClick = () => {
-    setLocationData('', '')
-    setDetailsOpen(false)
+    if (isManualEntry) {
+      setter({
+        ...data,
+        useManualEntry,
+      })
+    } else if (!isManualEntry) {
+      // Going back to location mode. Reset location data so that details match the selected country/state and region.
+      const topLocation = data.topLocation
+      const subLocation = data.subLocation
+      setter({
+        ...data,
+        ...dataForLocation(subLocation || topLocation),
+        useManualEntry,
+      })
+    }
   }
 
   // If a stored location exists, load latest data for that location.
   useEffect(() => {
-    if (isFilled(data.subLocation) || isTopLocation(data.topLocation)) {
+    if (
+      !data.useManualEntry &&
+      (isFilled(data.subLocation) || isTopLocation(data.topLocation))
+    ) {
       setLocationData(data.topLocation, data.subLocation)
     }
     // Intentionally not depending on data so that this runs once on mount.
@@ -204,13 +219,20 @@ export const PrevalenceControls: React.FunctionComponent<{
     isTopLocation(data.topLocation) &&
     Locations[data.topLocation].subdivisions.length > 1
 
-  const locationSet = isTopLocation(data.topLocation)
+  const locationSet = !data.useManualEntry && isTopLocation(data.topLocation)
 
-  const isManualEntryCurrently = isManualEntry(data.topLocation)
+  const [isManualEntryCurrently, setIsManualEntryCurrently] = useState(
+    !!data.useManualEntry,
+  )
 
   const [detailsOpen, setDetailsOpen] = useState(
     false || isManualEntryCurrently,
   )
+
+  const [
+    hadDetailsOpenInLocationMode,
+    setHadDetailsOpenInLocationMode,
+  ] = useState(false)
 
   const topLocationOptions = Object.keys(locationGroups).flatMap(
     (groupName) => {
@@ -256,16 +278,17 @@ export const PrevalenceControls: React.FunctionComponent<{
       <header id="location">
         <Trans>calculator.location_selector_header</Trans>
       </header>
-      <div className="form-group" hidden={isManualEntryCurrently}>
+      <div className="form-group">
         <ControlLabel
           id="top-location-typeahead"
           header={t('calculator.select_location_label')}
         />
         <Typeahead
           clearButton={true}
+          disabled={isManualEntryCurrently}
           highlightOnlyResult={true}
           id="top-location-typeahead"
-          inputProps={{ autoComplete: 'off' }}
+          inputProps={{ autoComplete: 'chrome-off' }}
           onChange={(e: Option[]) => {
             if (e.length !== 1) {
               setLocationData('', '')
@@ -280,7 +303,7 @@ export const PrevalenceControls: React.FunctionComponent<{
           }
         />
       </div>
-      {!showSubLocation ? null : (
+      {showSubLocation && (
         <div className="form-group">
           <ControlLabel
             id="sub-location-typeahead"
@@ -288,6 +311,7 @@ export const PrevalenceControls: React.FunctionComponent<{
           />
           <Typeahead
             clearButton={true}
+            disabled={isManualEntryCurrently}
             highlightOnlyResult={true}
             id="sub-location-typeahead"
             inputProps={{ autoComplete: 'chrome-off' }}
@@ -306,31 +330,28 @@ export const PrevalenceControls: React.FunctionComponent<{
           />
         </div>
       )}
-      {isManualEntryCurrently ? (
-        <span>
-          <button
-            id="switchBetweenManualDataAndLocationSelection"
-            className="btn btn-link text-muted"
-            onClick={handleSelectLocationButtonOnClick}
-          >
-            {t('calculator.switch_button.select_location')}
-          </button>
-        </span>
-      ) : (
-        <span>
-          <button
-            id="switchBetweenManualDataAndLocationSelection"
-            className="btn btn-link text-muted"
-            onClick={handleEnterDataButtonOnClick}
-          >
+      <span>
+        <ToggleButton
+          id="switchBetweenManualDataAndLocationSelection"
+          name={t('calculator.switch_button.select_location')}
+          type="checkbox"
+          checked={isManualEntryCurrently}
+          value="1"
+          variant="link"
+          className="text-muted"
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setManualPrevalenceData(e.currentTarget.checked)
+          }}
+        >
+          <span id="switchBetweenManualDataAndLocationSelectionText">
             {t('calculator.switch_button.enter_data_manually')}
-          </button>
-        </span>
-      )}
+          </span>
+        </ToggleButton>
+      </span>
       <ControlledExpandable
         id="prevalence-details"
         header={t('calculator.prevalence.details_header')}
-        headerClassName={isManualEntryCurrently ? 'd-none' : ''}
+        noContract={isManualEntryCurrently}
         open={detailsOpen}
         setter={setDetailsOpen}
       >

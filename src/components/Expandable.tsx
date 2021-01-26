@@ -5,6 +5,7 @@ import 'components/styles/Expandable.scss'
 
 export const ControlledExpandable: React.FunctionComponent<{
   id: string
+  noContract?: boolean
   header: string
   open: boolean
   setter: (value: boolean) => void
@@ -16,7 +17,11 @@ export const ControlledExpandable: React.FunctionComponent<{
     <div className={`expandable-section ${props.className || ''}`}>
       <span
         className={`expandable-header ${props.headerClassName || ''}`}
-        onClick={() => props.setter(!props.open)}
+        onClick={() => {
+          if (typeof props.noContract === 'undefined' || !props.noContract) {
+            props.setter(!props.open)
+          }
+        }}
         aria-controls={props.id}
         aria-expanded={props.open}
       >
