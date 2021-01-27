@@ -158,7 +158,7 @@ export const Calculator = (): React.ReactElement => {
           <FirstTimeUserIntroduction />
         </Col>
         <Col lg="4" md="12">
-          <Alert variant="secondary">
+          <Alert variant="info">
             <BsCheckBox />{' '}
             <Trans i18nKey="calculator.alerts.survey_request">
               <strong>We would love your feedback:</strong> lipsum
@@ -172,7 +172,7 @@ export const Calculator = (): React.ReactElement => {
               lipsum
             </Trans>
           </Alert>
-          <Alert className="alert-info">
+          <Alert variant="secondary">
             <BsFillInfoCircleFill />{' '}
             <Trans i18nKey="calculator.alerts.b117">
               <strong>Model update:</strong> Lipsum{' '}
