@@ -108,7 +108,10 @@ export const Calculator = (): React.ReactElement => {
     }
 
     const getStringForLocalStorage = (incomingData: CalculatorData) => {
-      const data: Partial<CalculatorData> = { ...incomingData }
+      const data: Partial<CalculatorData> = {
+        ...incomingData,
+        persistedAt: Date.now(),
+      }
       delete data['prevalanceDataDate']
       return JSON.stringify(data)
     }
@@ -116,10 +119,7 @@ export const Calculator = (): React.ReactElement => {
     // Store data for refresh
     localStorage.setItem(
       FORM_STATE_KEY,
-      getStringForLocalStorage({
-        ...calculatorData,
-        persistedAt: Date.now(),
-      }),
+      getStringForLocalStorage(calculatorData),
     )
 
     setQuery(filterParams(calculatorData), 'replace')
