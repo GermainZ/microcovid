@@ -61,44 +61,61 @@ export const SegmentedControl: React.FunctionComponent<{
         header={props.header}
         popover={props.popover}
       />
-      <ToggleButtonGroup
-        type="radio"
-        name={props.id}
-        id={props.id}
-        className={props.className}
-        value={activeValue}
-      >
-        {Object.keys(props.source).map((value, index) => (
-          <ToggleButton
-            key={index}
-            type="radio"
-            variant={props.variant}
-            name={props.id}
-            value={value}
-            checked={props.data[props.id] === value}
-            onMouseEnter={() => setHoverDesc(props.source[value].value)}
-            onMouseLeave={() => setHoverDesc('')}
-            onChange={(e) => {
-              setActiveDesc(props.source[value].value)
-              props.setter({ ...props.data, [props.id]: e.currentTarget.value })
-            }}
-          >
-            <span className="segmented-label">
-              {props.labelFactory
-                ? props.labelFactory(value)
-                : props.source[value].label}
-            </span>
-            <span className="segmented-multiplier">
-              {props.labelFactory
-                ? ''
-                : formatRiskMultiplier(
-                    props.hideRisk,
-                    props.source[value].multiplier,
-                  )}
-            </span>
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+      <div className="segmented-scrollable">
+        <ToggleButtonGroup
+          type="radio"
+          name={props.id}
+          id={props.id}
+          className={'segmented-wrap ' + props.className}
+          value={activeValue}
+        >
+          {[
+            Object.keys(props.source),
+            /*
+        Object.keys(props.source).slice(0, 3),
+        Object.keys(props.source).slice(3, 5),
+        Object.keys(props.source).slice(5),
+*/
+          ].map((buttonRow) => (
+            <>
+              {buttonRow.map((value, index) => (
+                <ToggleButton
+                  key={index}
+                  type="radio"
+                  variant={props.variant}
+                  name={props.id}
+                  value={value}
+                  className="segmented-button"
+                  checked={props.data[props.id] === value}
+                  onMouseEnter={() => setHoverDesc(props.source[value].value)}
+                  onMouseLeave={() => setHoverDesc('')}
+                  onChange={(e) => {
+                    setActiveDesc(props.source[value].value)
+                    props.setter({
+                      ...props.data,
+                      [props.id]: e.currentTarget.value,
+                    })
+                  }}
+                >
+                  <span className="segmented-label">
+                    {props.labelFactory
+                      ? props.labelFactory(value)
+                      : props.source[value].label}
+                  </span>
+                  <span className="segmented-multiplier">
+                    {props.labelFactory
+                      ? ''
+                      : formatRiskMultiplier(
+                          props.hideRisk,
+                          props.source[value].multiplier,
+                        )}
+                  </span>
+                </ToggleButton>
+              ))}
+            </>
+          ))}
+        </ToggleButtonGroup>
+      </div>
       <Form.Text id={props.id + 'HelpText'} muted>
         {hoverDesc || activeDesc}
       </Form.Text>

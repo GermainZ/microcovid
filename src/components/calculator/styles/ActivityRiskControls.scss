@@ -14,6 +14,30 @@
   border-color: $gray-400;
 }
 
+.segmented-label {
+  font-weight: bold;
+  min-height: 3.1em;
+  display: block;
+}
+
+.segmented-multiplier {
+  font-size: small;
+  color: $gray-600;
+}
+
+.btn:hover .segmented-multiplier {
+  color: $white;
+}
+
+.active .segmented-label {
+  font-weight: bold;
+}
+
+.active .segmented-multiplier {
+  color: $white;
+  font-weight: bolder;
+}
+
 #yourMask.segmented-scrollable .btn:hover {
   background-color: desaturate(lighten($cyan, 15%), 15%);
 }
@@ -38,26 +62,25 @@
   color: $gray-300;
 }
 
-.segmented-label {
-  font-weight: bold;
-  min-height: 3.5em;
-  display: block;
+@media (max-width: 576px) {
+  .segmented-wrap {
+    padding-left: 1px;
+    flex-wrap: wrap;
+    //background-color: red;
+  }
+
+  .segmented-button {
+    width: 100%;
+    // comment out to get single row
+    max-width: 33.33333%;
+  }
+
+  .segmented-label {
+    min-height: 3em;
+  }
+
+  #yourMaskHelpText, #theirMaskHelpText {
+    min-height: 3em;
+  }
 }
 
-.segmented-multiplier {
-  font-size: small;
-  color: $gray-600;
-}
-
-.btn:hover .segmented-multiplier {
-  color: $white;
-}
-
-.active .segmented-label {
-  font-weight: bold;
-}
-
-.active .segmented-multiplier {
-  color: $white;
-  font-weight: bolder;
-}
